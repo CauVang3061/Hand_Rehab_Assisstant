@@ -84,7 +84,7 @@ const FALLBACK_GAME_HUD = {
     secondaryValue: 'Follow guide checkpoints',
     statusText: 'Gamification scaffold active',
 };
-const DEV_AUTOSTART_GAME_MODE = true;
+const DEV_AUTOSTART_GAME_MODE = false;
 
 const appState = {
     exercises: [],
@@ -2813,10 +2813,36 @@ function syncOverlayCanvasSize() {
     }
 }
 
-function toScreenPoint(point) {
+function getCameraContentRect() {
+    const canvasWidth = dom.overlayCanvas.width;
+    const canvasHeight = dom.overlayCanvas.height;
+    const videoWidth = dom.cameraVideo.videoWidth || 960;
+    const videoHeight = dom.cameraVideo.videoHeight || 540;
+    const objectFit = window.getComputedStyle(dom.cameraVideo).objectFit || 'fill';
+
+    if (!canvasWidth || !canvasHeight || !videoWidth || !videoHeight || objectFit === 'fill') {
+        return { x: 0, y: 0, width: canvasWidth, height: canvasHeight };
+    }
+
+    const scale = objectFit === 'contain'
+        ? Math.min(canvasWidth / videoWidth, canvasHeight / videoHeight)
+        : Math.max(canvasWidth / videoWidth, canvasHeight / videoHeight);
+    const width = videoWidth * scale;
+    const height = videoHeight * scale;
+
     return {
-        x: point.x * dom.overlayCanvas.width,
-        y: point.y * dom.overlayCanvas.height,
+        x: (canvasWidth - width) / 2,
+        y: (canvasHeight - height) / 2,
+        width,
+        height,
+    };
+}
+
+function toScreenPoint(point) {
+    const contentRect = getCameraContentRect();
+    return {
+        x: contentRect.x + point.x * contentRect.width,
+        y: contentRect.y + point.y * contentRect.height,
     };
 }
 
