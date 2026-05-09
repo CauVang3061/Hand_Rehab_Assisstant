@@ -2066,6 +2066,15 @@ body.boot-mode .sidebar {
     opacity: 0.92;
 }
 
+.media-stage[data-mode="game"] video {
+    opacity: 1;
+    filter: contrast(1.08) saturate(1.05) brightness(1.14);
+}
+
+.media-stage[data-mode="game"] .camera-scrim {
+    background: linear-gradient(180deg, rgba(7, 13, 31, 0.04), rgba(7, 13, 31, 0.10));
+}
+
 .reference-panel {
     display: flex;
     align-items: center;
@@ -2332,7 +2341,7 @@ body.boot-mode .sidebar {
     }
 }
 
-/* ── sg-game-screen wrapper ── */
+/* sg-game-screen wrapper */
 .sg-game-screen { padding: 0; }
 
 .sg-layout {
@@ -2340,18 +2349,28 @@ body.boot-mode .sidebar {
     height: 100%;
     min-height: 520px;
     gap: 0;
+    background: #0d1117;
 }
 
-/* ── Side panel ── */
+/* Side panel */
 .sg-side-panel--left {
-    width: 136px;
+    width: 172px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 14px 10px;
-    border-right: 1px solid rgba(255,255,255,0.07);
-    background: rgba(255,255,255,0.015);
+    gap: 12px;
+    padding: 16px 12px;
+    border-right: 1px solid rgba(255,255,255,0.09);
+    background: rgba(8,11,18,0.88);
+}
+
+.sg-card {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.045);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
 .sg-card-kicker {
@@ -2365,20 +2384,102 @@ body.boot-mode .sidebar {
 
 .sg-cup-card { display: flex; flex-direction: column; align-items: center; }
 
+/* Fruit squeeze animation */
+
+/* Wrapper: fruit on top, drips below, then cup */
+.sg-fruit-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 4px 0 0;
+}
+
+/* Keep old selector working if referenced elsewhere */
+.sg-fruit-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 4px 0 0;
+    position: relative;
+}
+
+.sg-fruit-img {
+    width: 86px;
+    height: 86px;
+    object-fit: contain;
+    /* NO transition here — let animation take full control */
+    filter: drop-shadow(0 3px 8px rgba(255,125,38,0.4));
+    transform-origin: center bottom;
+}
+
+/* Idle: subtle float */
+.sg-fruit-img:not(.is-squeezing):not(.is-done) {
+    animation: fruit-idle 2.4s ease-in-out infinite;
+}
+
+@keyframes fruit-idle {
+    0%, 100% { transform: translateY(0px) scale(1,1); }
+    50%       { transform: translateY(-4px) scale(1,1); }
+}
+
+/* Squeezing: flatten + shake */
+.sg-fruit-img.is-squeezing {
+    animation: fruit-squeeze 0.18s ease-in-out infinite alternate;
+    filter: drop-shadow(0 6px 16px rgba(255,60,0,0.75));
+}
+
+@keyframes fruit-squeeze {
+    0%   { transform: scale(1.05, 0.92) translateY(2px); }
+    40%  { transform: scale(0.80, 0.72) translateY(6px); }
+    70%  { transform: scale(0.86, 0.76) translateY(5px) rotate(-3deg); }
+    100% { transform: scale(0.78, 0.68) translateY(8px) rotate(2deg); }
+}
+
+/* Done: flattened and faded */
+.sg-fruit-img.is-done {
+    animation: none !important;
+    transform: scale(0.65, 0.42) translateY(10px);
+    filter: drop-shadow(0 1px 3px rgba(255,125,38,0.15));
+    opacity: 0.45;
+    transition: transform 0.35s ease, opacity 0.35s ease, filter 0.35s ease;
+}
+
+/* Juice drips */
+.sg-drip-track {
+    width: 6px;
+    height: 28px;
+    position: relative;
+    overflow: visible;
+    margin: 0 auto;
+}
+
+/* Cup image overlay */
+.sg-cup-img {
+    width: 100%;
+    max-width: 80px;
+    object-fit: contain;
+    margin-top: -4px;
+    pointer-events: none;
+}
+
 .sg-cup-wrap {
     position: relative;
-    width: 44px;
-    height: 60px;
-    margin-bottom: 4px;
+    width: 74px;
+    height: 98px;
+    margin-bottom: 6px;
 }
 
 .sg-cup-body {
     position: absolute;
     bottom: 0; left: 0; right: 0; top: 0;
-    border: 2px solid rgba(255,255,255,0.2);
+    border: 3px solid rgba(255,255,255,0.52);
     border-top: none;
-    border-radius: 0 0 10px 10px;
+    border-radius: 0 0 18px 18px;
     overflow: hidden;
+    background: rgba(255,255,255,0.08);
+    box-shadow: inset 0 0 18px rgba(255,255,255,0.06), 0 8px 20px rgba(0,0,0,0.28);
 }
 
 .sg-cup-fill {
@@ -2386,7 +2487,7 @@ body.boot-mode .sidebar {
     bottom: 0; left: 0; right: 0;
     background: linear-gradient(180deg, #ff9640 0%, #ff5f00 100%);
     transition: height 0.1s ease-out;
-    border-radius: 0 0 8px 8px;
+    border-radius: 0 0 14px 14px;
 }
 
 .sg-cup-shine {
@@ -2398,41 +2499,70 @@ body.boot-mode .sidebar {
 }
 
 .sg-cup-value {
-    font-size: 9px;
-    color: rgba(255,255,255,0.4);
+    font-size: 10px;
+    color: rgba(255,255,255,0.68);
     text-align: center;
     margin-bottom: 4px;
 }
 
 .sg-drips {
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     justify-content: center;
-    gap: 5px;
-    height: 16px;
-    overflow: hidden;
+    gap: 7px;
+    height: 46px;
+    overflow: visible;
+    margin-top: -2px;
+    margin-bottom: -4px;
 }
 
 .sg-drips span {
-    width: 3px;
-    border-radius: 0 0 3px 3px;
-    background: #ff7d26;
+    width: 5px;
+    height: 0;
+    border-radius: 0 0 4px 4px;
+    background: linear-gradient(180deg, #ffb347 0%, #ff5f00 100%);
     opacity: 0;
-    transition: opacity 0.15s;
+    display: block;
+    transform-origin: top center;
 }
 
 .sg-cup-card.is-dripping .sg-drips span {
-    opacity: 1;
-    animation: sg-drip 0.8s ease-in infinite;
+    animation: sg-drip 0.55s cubic-bezier(0.4, 0, 1, 1) infinite;
 }
 
-.sg-cup-card.is-dripping .sg-drips span:nth-child(2) { animation-delay: 0.25s; }
-.sg-cup-card.is-dripping .sg-drips span:nth-child(3) { animation-delay: 0.5s; }
+.sg-cup-card.is-dripping .sg-drips span:nth-child(1) { animation-delay: 0s;    margin-left: -6px; }
+.sg-cup-card.is-dripping .sg-drips span:nth-child(2) { animation-delay: 0.18s; }
+.sg-cup-card.is-dripping .sg-drips span:nth-child(3) { animation-delay: 0.36s; margin-left: 6px; }
 
 @keyframes sg-drip {
-    0%   { height: 3px;  transform: translateY(-8px); opacity: 1; }
-    80%  { height: 10px; transform: translateY(2px);  opacity: 1; }
-    100% { height: 3px;  transform: translateY(14px); opacity: 0; }
+    0%   { height: 0;    opacity: 0;   transform: translateY(0); }
+    15%  { height: 6px;  opacity: 1;   transform: translateY(0); }
+    60%  { height: 18px; opacity: 1;   transform: translateY(14px); }
+    85%  { height: 10px; opacity: 0.7; transform: translateY(30px); }
+    100% { height: 2px;  opacity: 0;   transform: translateY(44px); }
+}
+
+/* Drip active state (triggered by JS, not cup-card) */
+.sg-drips.is-active span {
+    animation: sg-drip 0.55s cubic-bezier(0.4, 0, 1, 1) infinite;
+}
+.sg-drips.is-active span:nth-child(1) { animation-delay: 0s; }
+.sg-drips.is-active span:nth-child(2) { animation-delay: 0.18s; }
+.sg-drips.is-active span:nth-child(3) { animation-delay: 0.36s; }
+
+/* Cup body glow states */
+.sg-cup-body.is-filling {
+    box-shadow: inset 0 0 8px rgba(255,120,0,0.2);
+}
+.sg-cup-body.is-full {
+    box-shadow:
+        inset 0 0 12px rgba(255,120,0,0.45),
+        0 0 16px rgba(255,120,0,0.4);
+    animation: cup-full-pulse 0.7s ease-in-out infinite alternate;
+}
+@keyframes cup-full-pulse {
+    from { box-shadow: inset 0 0 10px rgba(255,120,0,0.35), 0 0 12px rgba(255,120,0,0.3); }
+    to   { box-shadow: inset 0 0 18px rgba(255,180,0,0.6), 0 0 22px rgba(255,150,0,0.55); }
 }
 
 /* ── sg-order-list ── */
@@ -2467,6 +2597,8 @@ body.boot-mode .sidebar {
     position: relative;
     flex: 1;
     min-height: 280px;
+    background: #0d1117;
+    overflow: hidden;
 }
 
 .sg-stage-overlay {
@@ -2477,6 +2609,7 @@ body.boot-mode .sidebar {
     justify-content: space-between;
     padding: 14px 16px;
     pointer-events: none;
+    z-index: 2;
 }
 
 .sg-stage-header { display: flex; align-items: flex-start; justify-content: space-between; }
@@ -2487,6 +2620,27 @@ body.boot-mode .sidebar {
 .sg-status-box  { text-align: right; }
 .sg-status-text { font-size: 11px; color: rgba(255,255,255,0.6); }
 .sg-status-caption { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 2px; }
+
+/* HUD bar */
+.sg-hud-bar {
+    display: flex;
+    align-items: center;
+    padding: 6px 14px;
+    background: rgba(13,17,23,0.96);
+    border-top: 1px solid rgba(255,255,255,0.07);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    flex-shrink: 0;
+}
+
+.sg-hud-status {
+    margin-left: auto;
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
+}
 
 /* HUD trip */
 .sg-hud {

@@ -223,9 +223,12 @@ function createModeAdapter(mode, exercise) {
 
         snapshot() {
             return {
+                modeId: mode.id,
+                modeTitle: mode.title,
                 hud: state?.hud,
                 summary: state?.summary,
-                viewState: state?.gameData,
+                gameData: state?.gameData || null,
+                viewState: state?.viewState || state?.gameData || null,
             };
         },
     };
@@ -880,8 +883,18 @@ function renderStrengtheningGameScreen() {
         <section class="screen training-screen sg-game-screen">
             <div class="sg-layout">
 
-                <!-- ── Left panel: cup + orders ─────────────────────────── -->
+                <!-- Left panel: cup + orders -->
                 <aside class="sg-side-panel sg-side-panel--left">
+
+                    <div class="sg-fruit-zone">
+                        <img id="sgFruitImg"
+                             src="/static/gamification/strengthening/assets/${game.orders && game.orders[game.activeOrderIndex || 0] && game.orders[game.activeOrderIndex || 0].icon === '🍋' ? 'lemon.png' : 'orange.png'}"
+                             class="sg-fruit-img ${game.isSqueezing ? 'is-squeezing' : ''}"
+                             alt="fruit" />
+                        <div class="sg-drips ${game.isSqueezing && !game.orderResolved ? 'is-active' : ''}" aria-hidden="true" id="sgDrips">
+                            <span></span><span></span><span></span>
+                        </div>
+                    </div>
 
                     <div class="sg-card sg-cup-card ${game.isSqueezing ? 'is-dripping' : ''}" id="juiceTargetCard">
                         <div class="sg-card-kicker">Cup</div>
@@ -894,9 +907,6 @@ function renderStrengtheningGameScreen() {
                         <div id="juiceCupValue" class="sg-cup-value">
                             ${Math.round(game.cupMl)} / ${game.targetMl} ml
                         </div>
-                        <div class="sg-drips" aria-hidden="true" id="sgDrips">
-                            <span></span><span></span><span></span>
-                        </div>
                     </div>
 
                     <div class="sg-card">
@@ -908,7 +918,7 @@ function renderStrengtheningGameScreen() {
 
                 </aside>
 
-                <!-- ── Center: camera + timing bar ──────────────────────── -->
+                <!-- Center: camera + timing bar -->
                 <section class="sg-center-column">
 
                     <!-- Camera stage -->
@@ -925,22 +935,23 @@ function renderStrengtheningGameScreen() {
                                     <div class="sg-status-caption">Timing bar active</div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
 
-                            <!-- HUD -->
-                            <div class="sg-hud">
-                                <div class="sg-hud-score">
-                                    <span class="sg-hud-label" id="trainingGamePrimaryLabel">${gameHud.primaryLabel}</span>
-                                    <strong class="sg-hud-value" id="trainingGamePrimaryValue">${gameHud.primaryValue}</strong>
-                                </div>
-                                <div class="sg-hud-divider"></div>
-                                <div class="sg-hud-order">
-                                    <span class="sg-hud-label" id="trainingGameSecondaryLabel">${gameHud.secondaryLabel}</span>
-                                    <strong class="sg-hud-value" id="trainingGameSecondaryValue">${gameHud.secondaryValue}</strong>
-                                </div>
-                                <div class="sg-combo-badge ${showCombo ? 'is-visible' : ''}" id="sgComboBadge">${comboLabel}</div>
+                    <!-- HUD bar -->
+                    <div class="sg-hud-bar">
+                        <div class="sg-hud">
+                            <div class="sg-hud-score">
+                                <span class="sg-hud-label" id="trainingGamePrimaryLabel">${gameHud.primaryLabel}</span>
+                                <strong class="sg-hud-value" id="trainingGamePrimaryValue">${gameHud.primaryValue}</strong>
                             </div>
-
-                            <div class="sg-stage-footer" id="trainingGameStatusText">${gameHud.statusText}</div>
+                            <div class="sg-hud-divider"></div>
+                            <div class="sg-hud-order">
+                                <span class="sg-hud-label" id="trainingGameSecondaryLabel">${gameHud.secondaryLabel}</span>
+                                <strong class="sg-hud-value" id="trainingGameSecondaryValue">${gameHud.secondaryValue}</strong>
+                            </div>
+                            <div class="sg-combo-badge ${showCombo ? 'is-visible' : ''}" id="sgComboBadge">${comboLabel}</div>
+                            <div class="sg-hud-status" id="trainingGameStatusText">${gameHud.statusText}</div>
                         </div>
                     </div>
 
@@ -1747,7 +1758,9 @@ function mountPersistentMedia() {
     dom.referencePanel.classList.add('is-hidden');
 
     const cameraMount = dom.screenRoot.querySelector('#cameraMount');
-    const shouldMountCamera = cameraMount && appState.cameraRunning && !(appState.training && appState.training.interactionMode === 'pinch_defense' && appState.screen === 'training');
+    const shouldMountCamera = cameraMount
+        && appState.cameraRunning
+        && !(appState.training && appState.training.interactionMode === 'pinch_defense' && appState.screen === 'training');
     if (shouldMountCamera) {
         cameraMount.appendChild(dom.cameraStage);
         dom.cameraStage.classList.remove('is-hidden');
@@ -2632,8 +2645,6 @@ function updateTrainingUI() {
 
     if (!gameData) return;
 
-    // Strengthening-game-specific DOM updates 
-
     // Timing marker
     const timingShell = dom.screenRoot.querySelector('#sgTimingShell');
     const markerEl    = dom.screenRoot.querySelector('#juiceTimingMarker');
@@ -2708,6 +2719,36 @@ function updateTrainingUI() {
         const comboLabel = comboStreak >= 3 ? '×1.5 COMBO' : '×1.2 COMBO';
         comboBadge.classList.toggle('is-visible', showCombo);
         comboBadge.textContent = comboLabel;
+    }
+
+    // Fruit image — swap src when order changes, animate on squeeze
+    const fruitImg = dom.screenRoot.querySelector('#sgFruitImg');
+    if (fruitImg && gameData.orders) {
+        const activeOrder = gameData.orders[gameData.activeOrderIndex || 0];
+        const isLemon = activeOrder && activeOrder.icon === '🍋';
+        const fruitSrc = `/static/gamification/strengthening/assets/${isLemon ? 'lemon.png' : 'orange.png'}`;
+        if (!fruitImg.src.endsWith(isLemon ? 'lemon.png' : 'orange.png')) {
+            fruitImg.src = fruitSrc;
+        }
+        const squeezing = Boolean(gameData.isSqueezing && !gameData.orderResolved);
+        const done = Boolean(gameData.orderResolved);
+        fruitImg.classList.toggle('is-squeezing', squeezing);
+        fruitImg.classList.toggle('is-done', done);
+    }
+
+    // Drip track — standalone toggle
+    const dripEl = dom.screenRoot.querySelector('#sgDrips');
+    if (dripEl) {
+        const showDrips = Boolean(gameData.isSqueezing && !gameData.orderResolved);
+        dripEl.classList.toggle('is-active', showDrips);
+    }
+
+    // Cup glow when nearly full
+    const cupBody = dom.screenRoot.querySelector('.sg-cup-body');
+    if (cupBody) {
+        const pct = clamp((gameData.cupMl || 0) / Math.max(1, gameData.targetMl || 250) * 100, 0, 100);
+        cupBody.classList.toggle('is-full', pct >= 98);
+        cupBody.classList.toggle('is-filling', pct > 10 && pct < 98);
     }
 
     // Result popup

@@ -1,7 +1,7 @@
 {
     "assets": {
-        "cup": "assets/cup.jpg",
-        "orange": "assets/orange.jpg",
-        "lemon": "assets/lemon.jpg"
+        "cup": "cup.png",
+        "orange": "orange.png",
+        "lemon": "lemon.png"
     }
 }

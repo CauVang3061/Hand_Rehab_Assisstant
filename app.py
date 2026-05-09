@@ -80,7 +80,7 @@ def is_supported_exercise(exercise_id):
     return exercise_id in SUPPORTED_EXERCISE_IDS
 
 
-# ── Routes ────────────────────────────────────────────────
+# Routes
 
 @app.route("/")
 def index():

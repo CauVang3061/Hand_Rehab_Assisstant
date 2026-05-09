@@ -416,6 +416,18 @@
             runtime.drips = runtime.drips.filter((d) => d.alive);
         }
 
+        // Draw drip particles
+        function drawDrips(ctx) {
+            for (const d of runtime.drips) {
+                ctx.globalAlpha = clamp(d.opacity, 0, 1);
+                ctx.beginPath();
+                ctx.ellipse(d.x, d.y, d.r * 0.6, d.r, 0, 0, Math.PI * 2);
+                ctx.fillStyle = COLORS.dripColor;
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
+
         // Score pop
         function updateScorePops(dt) {
             for (const p of runtime.scorePops) {

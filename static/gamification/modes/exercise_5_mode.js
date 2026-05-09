@@ -30,7 +30,7 @@
     ];
 
     const assetStore = globalObject.StrengtheningAssets
-        ? globalObject.StrengtheningAssets.createAssetStore('./assets/manifest.json')
+        ? globalObject.StrengtheningAssets.createAssetStore('/static/gamification/strengthening/assets/manifest.json')
         : { ensureLoaded: () => Promise.resolve(), getImage: () => null, hasImage: () => false };
 
     const renderer = globalObject.StrengtheningRenderer.createRenderer({}, assetStore);
@@ -285,6 +285,8 @@
         async onSessionStart(state) {
             await assetStore.ensureLoaded();
             state.hud.statusText = 'Order 1 ready — start squeezing!';
+            // Push initial state so renderer has data before first onFrame
+            renderer.update({ ...state.gameData, score: state.score });
         },
 
         onFrame(state, payload) {
@@ -356,7 +358,7 @@
 
             state.gameData.wasSqueezing = isSqueezing;
 
-            renderer.update({ ...state.gameData, score: state.score });
+            renderer.update({ ...state.gameData, score: state.score, orders: state.gameData.orders, activeOrderIndex: state.gameData.activeOrderIndex });
         },
 
         onCheckpoint() {},
